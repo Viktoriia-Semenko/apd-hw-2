@@ -13,7 +13,16 @@ Do not paste secrets or an unreviewed raw transcript.
 | 2026-10-16 | ChatGPT (GPT-6) | Asked how to verify that all submitted jobs produce correct results in their original order. Suggested comparing the returned array with expected JobResult values using XCTAssertEqual | Accepted the approach because it checks both the result values and their ordering | `testMaximumConcurrencyNeverExceededAndAllJobsRun` - result assertions|
 | 2026-10-16 | ChatGPT (GPT-6) | Asked how to simplify result assertions for multiple jobs in testMaximumConcurrencyNeverExceededAndAllJobsRun. Suggested using jobs.map to generate expected JobResult values instead of writing them manually | Accepted the approach because it reduces repetitive code and verifies both result values and input ordering | `testMaximumConcurrencyNeverExceededAndAllJobsRun` — XCTAssertEqual with jobs.map |
 | 2026-10-16 | ChatGPT (GPT-6) | Asked how to test whether a worker throwing CancellationError allows subsequent jobs to continue. Suggested using two jobs, where the first throws and the second succeeds | Accepted the test scenario because it distinguishes individual worker cancellation from cancellation of the entire processor | `testWorkerCancellationErrorDoesNotStopLaterJobs`. after finalizing the code, I ran sqift test - Test Suite 'TaskProcessorStudentTests' passed at 2026-10-16 14:35:50.819. Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds|
+| 2026-10-16 | ChatGPT (GPT-6) | Discussed simplifying cancellation tests for testCallerCancellationStopsQueuedJobs. Suggested using AsyncStream instead of a separate actor as I thought to track when workers start | Accepted the simpler approach because it reduces additional code while keeping the tests predictable | `TaskProcessorStudentTests.swift` - AsyncStream usage |
+| 2026-10-16 | ChatGPT (GPT-6) | Discussed how to verify that queued jobs do not start after cancellation. Suggested tracking started job IDs and checking the final outcomes | Accepted the approach because it verifies that only the initially scheduled workers started | used idea to make `testCallerCancellationStopsQueuedJobs` |
+| 2026-10-16 | ChatGPT (GPT-6) | Discussed how to check that completed results remain unchanged after cancellation. Suggested testing successful, failed, running and queued jobs together. | Accepted the scenario because it covers different outcomes in one test. | used idea to make `testCancellationKeepsCompletedResults`. swift test - Test Suite 'TaskProcessorStudentTests' passed at 2026-10-16 21:33:52.580. Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds |
+
 
 ## Final review
 
-<!-- Summarize remaining risks and confirm that you inspected the final diff. -->
+I reviewed the ChatGPT suggestions and used the approaches that were simple and appropriate for the assignment.
+My implementation covers input validation, bounded concurrency, result ordering, error handling, and cancellation.
+
+After completing the implementation, I ran `swift test`: all 11 tests passed with 0 failures.
+The remaining risk is that some concurrency edge cases may not be covered by the current tests.
+I checked the final code changes in Git and confirmed that only the necessary files were modified.

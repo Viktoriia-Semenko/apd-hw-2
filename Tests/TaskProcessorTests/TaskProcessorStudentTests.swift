@@ -128,4 +128,103 @@ final class TaskProcessorStudentTests: XCTestCase {
             ]
         )
     }
+    
+    func testCallerCancellationStopsQueuedJobs() async throws {
+        let processor = try TaskProcessor(maximumConcurrency: 2)
+        let jobs = (1...4).map {
+            Job(id: "job-\($0)", input: $0)
+        }
+
+        let (starts, signal) = AsyncStream<String>.makeStream()
+
+        let processing = Task {
+            try await processor.process(jobs) { job in
+                signal.yield(job.id)
+                try await Task.sleep(for: .seconds(30))
+                return job.input
+            }
+        }
+
+        var iterator = starts.makeAsyncIterator()
+
+        let first = await iterator.next()
+        let second = await iterator.next()
+
+        processing.cancel()
+
+        let results = try await processing.value
+
+        signal.finish()
+        let extra = await iterator.next()
+
+        XCTAssertEqual(
+            Set([first, second].compactMap { $0 }),
+            Set(["job-1", "job-2"])
+        )
+        XCTAssertNil(extra)
+
+        XCTAssertEqual(
+            results,
+            jobs.map {
+                JobResult(id: $0.id, outcome: .cancelled)
+            }
+        )
+    }
+    
+    private enum CancellationTestError: Error {
+        case expected
+    }
+    
+    func testCancellationKeepsCompletedResults() async throws {
+        let processor = try TaskProcessor(maximumConcurrency: 1)
+
+        let jobs = [
+            Job(id: "success", input: 1),
+            Job(id: "failure", input: 2),
+            Job(id: "running", input: 3),
+            Job(id: "queued", input: 4)
+        ]
+        let (starts, signal) = AsyncStream<String>.makeStream()
+
+        let processing = Task {
+            try await processor.process(jobs) { job in
+                signal.yield(job.id)
+
+                switch job.id {
+                case "success":
+                    return 99
+                case "failure":
+                    throw CancellationTestError.expected
+                default:
+                    try await Task.sleep(for: .seconds(30))
+                    return job.input
+                }
+            }
+        }
+        var iterator = starts.makeAsyncIterator()
+
+        let first = await iterator.next()
+        let second = await iterator.next()
+        let third = await iterator.next()
+
+        XCTAssertEqual(
+            [first, second, third].compactMap { $0 },
+            ["success", "failure", "running"]
+        )
+        processing.cancel()
+
+        let results = try await processing.value
+
+        signal.finish()
+        let extra = await iterator.next()
+
+        XCTAssertNil(extra)
+
+        XCTAssertEqual(results, [
+            JobResult(id: "success", outcome: .succeeded(99)),
+            JobResult(id: "failure", outcome: .failed),
+            JobResult(id: "running", outcome: .cancelled),
+            JobResult(id: "queued", outcome: .cancelled)
+        ])
+    }
 }

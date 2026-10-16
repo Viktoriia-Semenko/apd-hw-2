@@ -18,9 +18,9 @@ tests pass.
 - [x] Validate configuration and all job IDs before starting work.
 - [x] Schedule jobs within the concurrency limit and preserve input order.
 - [x] Map success, ordinary errors, and cancellation outcomes.
-- [ ] Handle caller cancellation and never-started jobs.
-- [ ] Add at least six distinct student-authored tests and run `swift test`.
-- [ ] Review the final diff and document AI assistance in `AGENT_WORKLOG.md`.
+- [x] Handle caller cancellation and never-started jobs.
+- [x] Add at least six distinct student-authored tests and run `swift test`.
+- [x] Review the final diff and document AI assistance in `AGENT_WORKLOG.md`.
 
 ## Risks and checks
 
@@ -31,3 +31,15 @@ tests pass.
 - **Error mapping:** test ordinary errors and `CancellationError` separately; verify that other jobs continue
 - **Caller cancellation:** use deterministic gates to cancel while workers are active, confirm that no queued job starts, and verify that never-started jobs are `.cancelled`
 - **Race conditions and deadlocks:** keep mutable scheduling state local to the `process` invocation and avoid shared mutable state, blocking waits, locks, and timing-based assertions. Use structured concurrency for child-task lifetime and cancellation
+
+### Final `swift test`
+```bash
+Test Suite 'TaskProcessorPublicTests' passed at 2026-10-16 21:33:52.578.
+     Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'TaskProcessorStudentTests' passed at 2026-10-16 21:33:52.580.
+     Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'apd-hw-2PackageTests.xctest' passed at 2026-10-16 21:33:52.580.
+     Executed 11 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'All tests' passed at 2026-10-16 21:33:52.580.
+     Executed 11 tests, with 0 failures (0 unexpected) in 0.005 (0.008) seconds
+```
