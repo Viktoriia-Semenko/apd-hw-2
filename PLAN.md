@@ -15,9 +15,9 @@ tests pass.
 
 ## Milestones
 
-- [ ] Validate configuration and all job IDs before starting work.
-- [ ] Schedule jobs within the concurrency limit and preserve input order.
-- [ ] Map success, ordinary errors, and cancellation outcomes.
+- [x] Validate configuration and all job IDs before starting work.
+- [x] Schedule jobs within the concurrency limit and preserve input order.
+- [x] Map success, ordinary errors, and cancellation outcomes.
 - [ ] Handle caller cancellation and never-started jobs.
 - [ ] Add at least six distinct student-authored tests and run `swift test`.
 - [ ] Review the final diff and document AI assistance in `AGENT_WORKLOG.md`.
